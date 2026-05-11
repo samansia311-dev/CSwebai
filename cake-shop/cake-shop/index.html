@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="سفارش کیک سفارشی آنلاین">
+<title>🎂 سفارش کیک سفارشی</title>
+<style>
+@font-face { font-family:'Vazirmatn'; src:url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Light.woff2') format('woff2'); font-weight:300; font-display:swap; }
+@font-face { font-family:'Vazirmatn'; src:url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Regular.woff2') format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Vazirmatn'; src:url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Medium.woff2') format('woff2'); font-weight:500; font-display:swap; }
+@font-face { font-family:'Vazirmatn'; src:url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-SemiBold.woff2') format('woff2'); font-weight:600; font-display:swap; }
+@font-face { font-family:'Vazirmatn'; src:url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Bold.woff2') format('woff2'); font-weight:700; font-display:swap; }
+@font-face { font-family:'Vazirmatn'; src:url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-ExtraBold.woff2') format('woff2'); font-weight:800; font-display:swap; }
+@font-face { font-family:'Vazirmatn'; src:url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Black.woff2') format('woff2'); font-weight:900; font-display:swap; }
+</style>
+<style>
+/* ═══ RESET ═══ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+ 
+/* ═══ TOKENS ═══ */
+:root{
+  --bg:#07070F;
+  --glass:rgba(255,255,255,0.055);
+  --glass-border:rgba(255,255,255,0.1);
+  --orb1:#FF6B35; --orb2:#C4526A; --orb3:#7B4FD4; --orb4:#1FA88C;
+  --accent:#FF8C42; --accent2:#FF4D8B; --gold:#FFD166; --teal:#1FA88C;
+  --text:#F0EBE3;
+  --text-dim:rgba(240,235,227,0.55);
+  --text-muted:rgba(240,235,227,0.32);
+  --border:rgba(255,255,255,0.08);
+  --r:20px; --r-sm:12px;
+}
+ 
+html{scroll-behavior:smooth;}
+ 
+body{
+  font-family:'Vazirmatn',-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  direction:rtl;
+}
+ 
+/* grain */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+ 
+/* ═══ ORBS ═══ */
+.orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.28;animation:drift 14s ease-in-out infinite alternate;}
+.orb-1{width:520px;height:520px;background:var(--orb1);top:-15%;right:-10%;animation-delay:0s;}
+.orb-2{width:400px;height:400px;background:var(--orb2);top:35%;left:-12%;animation-delay:-4s;}
+.orb-3{width:360px;height:360px;background:var(--orb3);bottom:-10%;right:15%;animation-delay:-8s;}
+.orb-4{width:300px;height:300px;background:var(--orb4);bottom:25%;left:25%;animation-delay:-11s;}
+@keyframes drift{from{transform:translate(0,0) scale(1);}to{transform:translate(28px,18px) scale(1.1);}}
+ 
+/* ═══ LAYOUT ═══ */
+.page{position:relative;z-index:2;max-width:620px;margin:0 auto;padding:0 16px 100px;}
+ 
+/* ═══ HERO ═══ */
+.hero{padding:56px 0 40px;text-align:center;animation:slideDown .8s cubic-bezier(.16,1,.3,1) both;}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(16px);border-radius:100px;
+  padding:7px 18px;font-size:11px;font-weight:700;
+  color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px;
+}
+.hero h1{
+  font-size:clamp(42px,11vw,66px);font-weight:900;line-height:1.0;letter-spacing:-2px;
+  background:linear-gradient(135deg,#fff 0%,var(--gold) 35%,var(--accent) 65%,var(--accent2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:14px;
+}
+.hero p{font-size:15px;color:var(--text-dim);font-weight:300;line-height:1.65;max-width:360px;margin:0 auto;}
+.divider{display:flex;align-items:center;gap:14px;margin:28px 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:linear-gradient(to left,transparent,var(--border),transparent);}
+.divider span{font-size:16px;opacity:.5;}
+ 
+/* ═══ CARD ═══ */
+.card{
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border-radius:var(--r);padding:28px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+  animation:fadeUp .6s cubic-bezier(.16,1,.3,1) both;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);}
+.card:nth-of-type(1){animation-delay:.08s;}
+.card:nth-of-type(2){animation-delay:.14s;}
+.card:nth-of-type(3){animation-delay:.20s;}
+ 
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(26px);}to{opacity:1;transform:translateY(0);}}
+ 
+/* section header */
+.sec-head{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+.sec-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.si-o{background:linear-gradient(135deg,#FF6B35,#FF8C42);}
+.si-p{background:linear-gradient(135deg,#C4526A,#FF4D8B);}
+.si-t{background:linear-gradient(135deg,#1FA88C,#38D9C0);}
+.sec-title{font-size:15px;font-weight:700;letter-spacing:-.3px;}
+.sec-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+ 
+/* ═══ FIELDS ═══ */
+.field{margin-bottom:16px;}
+.field:last-child{margin-bottom:0;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+ 
+label{display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:8px;letter-spacing:.6px;text-transform:uppercase;}
+label .req{color:var(--accent);}
+ 
+input,select,textarea{
+  width:100%;padding:14px 16px;
+  background:rgba(255,255,255,0.045);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  font-family:'Vazirmatn',sans-serif;font-size:14px;color:var(--text);
+  outline:none;transition:all .25s;direction:rtl;-webkit-appearance:none;
+}
+input::placeholder,textarea::placeholder{color:var(--text-muted);font-weight:300;}
+input:focus,select:focus,textarea:focus{
+  border-color:rgba(255,140,66,.5);
+  background:rgba(255,140,66,.05);
+  box-shadow:0 0 0 3px rgba(255,140,66,.1);
+}
+select{
+  cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(240,235,227,0.35)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:left 14px center;padding-left:40px;
+}
+select option{background:#12121E;color:var(--text);}
+textarea{resize:vertical;min-height:82px;line-height:1.7;}
+ 
+/* ═══ FLAVOR GRID ═══ */
+.flavor-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.fc{position:relative;}
+.fc input[type="radio"]{position:absolute;opacity:0;width:0;height:0;}
+.fc label{
+  display:flex;flex-direction:column;align-items:center;padding:13px 6px;
+  background:rgba(255,255,255,0.038);border:1px solid var(--border);
+  border-radius:14px;cursor:pointer;transition:all .25s cubic-bezier(.34,1.56,.64,1);
+  text-align:center;margin:0;gap:4px;text-transform:none;letter-spacing:0;color:var(--text);
+}
+.fc label:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,.18);transform:translateY(-2px);}
+.fc input:checked+label{
+  background:linear-gradient(135deg,rgba(255,107,53,.22),rgba(255,77,139,.15));
+  border-color:var(--accent);
+  box-shadow:0 0 22px rgba(255,140,66,.2),inset 0 1px 0 rgba(255,255,255,.1);
+  transform:translateY(-3px) scale(1.03);
+}
+.fe{font-size:22px;line-height:1;}
+.fn{font-size:11px;font-weight:700;color:var(--text);}
+.fp{font-size:9.5px;color:var(--text-muted);}
+ 
+/* ═══ PILLS ═══ */
+.pills{display:flex;gap:8px;flex-wrap:wrap;}
+.pill{position:relative;}
+.pill input[type="radio"]{position:absolute;opacity:0;}
+.pill label{
+  display:flex;align-items:center;gap:7px;padding:11px 18px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:100px;cursor:pointer;transition:all .2s;
+  font-size:13px;font-weight:600;color:var(--text-dim);margin:0;
+  white-space:nowrap;text-transform:none;letter-spacing:0;
+}
+.pill label:hover{background:rgba(255,255,255,.08);color:var(--text);}
+.pill input:checked+label{
+  background:linear-gradient(135deg,rgba(255,107,53,.22),rgba(196,82,106,.18));
+  border-color:var(--accent);color:var(--text);
+  box-shadow:0 0 18px rgba(255,140,66,.15);
+}
+ 
+/* ═══ DELIVERY TOGGLE ═══ */
+.dtoggle-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.dt{position:relative;}
+.dt input[type="radio"]{position:absolute;opacity:0;}
+.dt label{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  padding:20px 14px;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:var(--r-sm);cursor:pointer;transition:all .25s;margin:0;text-align:center;
+  text-transform:none;letter-spacing:0;color:var(--text-dim);
+}
+.dt label .di{font-size:28px;}
+.dt label .dn{font-size:14px;font-weight:700;color:var(--text);}
+.dt label .ds{font-size:11px;color:var(--text-muted);}
+.dt label:hover{background:rgba(255,255,255,.08);}
+.dt input:checked+label{
+  background:linear-gradient(135deg,rgba(31,168,140,.2),rgba(56,217,192,.1));
+  border-color:var(--teal);box-shadow:0 0 22px rgba(31,168,140,.15);
+}
+ 
+/* ═══ ADDRESS SLIDE ═══ */
+#addr-wrap{overflow:hidden;max-height:0;opacity:0;transition:max-height .4s ease,opacity .3s ease,margin .3s;}
+#addr-wrap.open{max-height:220px;opacity:1;margin-top:14px;}
+ 
+/* ═══ DATE PICKER ═══ */
+.date-row{display:flex;gap:8px;align-items:flex-end;}
+.date-input-wrap{flex:1;}
+.date-btn{
+  padding:14px 16px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:var(--r-sm);
+  font-family:'Vazirmatn',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;
+}
+.date-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,140,66,.35);}
+ 
+/* Date picker modal */
+.dp-overlay{
+  display:none;
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(7,7,15,.9);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  z-index:9999;
+  align-items:center;justify-content:center;
+  padding:20px;
+}
+.dp-overlay.open{display:flex;}
+ 
+.dp-box{
+  background:#13131F;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:24px;padding:28px 24px;
+  width:100%;max-width:420px;
+  max-height:88vh;overflow-y:auto;
+  direction:rtl;
+  box-shadow:0 32px 80px rgba(0,0,0,.6);
+  position:relative;
+}
+.dp-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+  border-radius:24px 24px 0 0;
+}
+ 
+.dp-title{font-size:17px;font-weight:800;color:var(--text);text-align:center;margin-bottom:24px;}
+ 
+.dp-section{margin-bottom:22px;}
+.dp-section-label{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;}
+ 
+/* year stepper */
+.year-row{display:flex;align-items:center;justify-content:center;gap:16px;}
+.year-btn{
+  width:44px;height:44px;border-radius:12px;
+  background:rgba(255,255,255,.06);border:1px solid var(--border);
+  color:var(--text);font-size:20px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.year-btn:hover{background:rgba(255,140,66,.2);border-color:var(--accent);}
+.year-val{
+  font-size:22px;font-weight:900;color:var(--text);
+  min-width:90px;text-align:center;letter-spacing:-1px;
+}
+ 
+/* month grid */
+.month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.m-btn{
+  padding:11px 8px;background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:10px;
+  color:var(--text-dim);font-family:'Vazirmatn',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.m-btn:hover{background:rgba(255,255,255,.08);color:var(--text);}
+.m-btn.active{
+  background:linear-gradient(135deg,rgba(255,107,53,.25),rgba(255,77,139,.18));
+  border-color:var(--accent);color:var(--text);
+  box-shadow:0 0 14px rgba(255,140,66,.18);
+}
+ 
+/* day grid */
+.day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+.d-btn{
+  aspect-ratio:1;background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:8px;
+  color:var(--text-dim);font-family:'Vazirmatn',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;
+}
+.d-btn:hover{background:rgba(255,255,255,.1);color:var(--text);}
+.d-btn.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-color:transparent;color:#fff;
+  box-shadow:0 0 14px rgba(255,140,66,.35);
+}
+.d-btn.today{border-color:var(--gold);}
+ 
+/* dp actions */
+.dp-actions{display:flex;gap:10px;margin-top:24px;}
+.dp-cancel{
+  flex:1;padding:13px;background:rgba(255,255,255,.07);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  color:var(--text-dim);font-family:'Vazirmatn',sans-serif;
+  font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.dp-cancel:hover{background:rgba(255,255,255,.12);color:var(--text);}
+.dp-confirm{
+  flex:2;padding:13px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;border-radius:var(--r-sm);
+  color:#fff;font-family:'Vazirmatn',sans-serif;
+  font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.dp-confirm:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,140,66,.35);}
+ 
+/* ═══ PRICE CARD ═══ */
+.price-card{
+  display:none;
+  background:linear-gradient(135deg,rgba(255,107,53,.13),rgba(196,82,106,.1),rgba(123,79,212,.08));
+  border:1px solid rgba(255,140,66,.22);border-radius:var(--r);
+  padding:22px 28px;align-items:center;justify-content:space-between;
+  margin-bottom:14px;backdrop-filter:blur(20px);position:relative;overflow:hidden;
+}
+.price-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,140,66,.45),transparent);}
+.price-card.show{display:flex;animation:fadeUp .4s ease;}
+.p-tag{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.p-num{
+  font-size:34px;font-weight:900;letter-spacing:-1.5px;
+  background:linear-gradient(135deg,var(--gold),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.p-unit{font-size:13px;color:var(--text-dim);margin-top:2px;}
+.p-ico{font-size:42px;opacity:.65;}
+ 
+/* ═══ SUBMIT ═══ */
+.submit-btn{
+  width:100%;padding:20px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:var(--r);
+  font-family:'Vazirmatn',sans-serif;font-size:17px;font-weight:800;
+  cursor:pointer;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 8px 36px rgba(255,107,53,.35),0 2px 8px rgba(0,0,0,.3);
+  letter-spacing:-.3px;position:relative;overflow:hidden;
+}
+.submit-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .3s;}
+.submit-btn:hover::before{opacity:1;}
+.submit-btn:hover{transform:translateY(-3px) scale(1.01);box-shadow:0 16px 48px rgba(255,107,53,.45);}
+.submit-btn:active{transform:translateY(0) scale(.99);}
+.submit-btn:disabled{opacity:.65;cursor:not-allowed;transform:none;box-shadow:none;}
+ 
+/* ═══ ERROR ═══ */
+.err{margin-top:12px;padding:14px 18px;background:rgba(255,77,139,.1);border:1px solid rgba(255,77,139,.3);border-radius:var(--r-sm);font-size:13px;color:#FF7BAE;display:none;line-height:1.5;}
+ 
+/* ═══ SUCCESS ═══ */
+.success-wrap{display:none;position:fixed;inset:0;background:rgba(7,7,15,.88);backdrop-filter:blur(24px);z-index:200;align-items:center;justify-content:center;padding:24px;}
+.success-wrap.show{display:flex;}
+.success-box{
+  background:#13131F;border:1px solid rgba(255,255,255,.12);
+  backdrop-filter:blur(40px);border-radius:28px;padding:52px 40px;
+  text-align:center;max-width:380px;width:100%;
+  animation:popIn .5s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;
+}
+.success-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);}
+@keyframes popIn{from{opacity:0;transform:scale(.72) translateY(40px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.s-emoji{font-size:72px;display:block;margin-bottom:20px;animation:wiggle .6s .3s ease both;}
+@keyframes wiggle{0%,100%{transform:rotate(0);}25%{transform:rotate(-10deg) scale(1.2);}75%{transform:rotate(10deg) scale(1.1);}}
+.s-title{font-size:26px;font-weight:900;letter-spacing:-.5px;background:linear-gradient(135deg,var(--gold),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;}
+.s-msg{font-size:14px;color:var(--text-dim);line-height:1.75;}
+.s-id{margin-top:14px;font-size:12px;color:var(--text-muted);letter-spacing:.5px;}
+.s-close{margin-top:28px;padding:15px 40px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:100px;font-family:'Vazirmatn',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;box-shadow:0 6px 24px rgba(255,107,53,.3);}
+.s-close:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(255,107,53,.5);}
+ 
+@media(max-width:480px){
+  .card{padding:20px;}
+  .row2{grid-template-columns:1fr;}
+  .flavor-grid{grid-template-columns:repeat(4,1fr);}
+}
+</style>
+</head>
+<body>
+ 
+<!-- orbs -->
+<div class="orbs">
+  <div class="orb orb-1"></div><div class="orb orb-2"></div>
+  <div class="orb orb-3"></div><div class="orb orb-4"></div>
+</div>
+ 
+<div class="page">
+ 
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge">🎂 سفارش آنلاین کیک</div>
+    <h1>کیک<br>رویاهایت</h1>
+    <p>کیک سفارشی خود را طراحی کنید — دقیق، خوشمزه، فقط برای شما</p>
+    <div class="divider"><span>✦</span></div>
+  </div>
+ 
+  <form id="orderForm" novalidate>
+ 
+    <!-- CARD 1: Customer -->
+    <div class="card">
+      <div class="sec-head">
+        <div class="sec-icon si-o">👤</div>
+        <div><div class="sec-title">اطلاعات شما</div><div class="sec-sub">چطور با شما تماس بگیریم؟</div></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>نام و نام خانوادگی <span class="req">*</span></label>
+          <input type="text" name="name" id="fname" placeholder="علی رضایی" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label>شماره موبایل <span class="req">*</span></label>
+          <input type="tel" name="phone" id="phone" placeholder="09xxxxxxxxx" required maxlength="11" autocomplete="tel">
+        </div>
+      </div>
+    </div>
+ 
+    <!-- CARD 2: Cake -->
+    <div class="card">
+      <div class="sec-head">
+        <div class="sec-icon si-p">🍰</div>
+        <div><div class="sec-title">مشخصات کیک</div><div class="sec-sub">طعم، وزن و شکل دلخواه</div></div>
+      </div>
+ 
+      <div class="field">
+        <label>طعم کیک <span class="req">*</span></label>
+        <div class="flavor-grid">
+          <div class="fc"><input type="radio" name="flavor" id="f1" value="Mocha"><label for="f1"><span class="fe">☕</span><span class="fn">موکا</span><span class="fp">765K/kg</span></label></div>
+          <div class="fc"><input type="radio" name="flavor" id="f2" value="Nutella"><label for="f2"><span class="fe">🌰</span><span class="fn">نوتلا</span><span class="fp">780K/kg</span></label></div>
+          <div class="fc"><input type="radio" name="flavor" id="f3" value="Vanilla"><label for="f3"><span class="fe">🍦</span><span class="fn">وانیل</span><span class="fp">700K/kg</span></label></div>
+          <div class="fc"><input type="radio" name="flavor" id="f4" value="Chocolate"><label for="f4"><span class="fe">🍫</span><span class="fn">شکلات</span><span class="fp">650K/kg</span></label></div>
+          <div class="fc"><input type="radio" name="flavor" id="f5" value="Raspberry Vanilla"><label for="f5"><span class="fe">🫐</span><span class="fn">وانیل تمشک</span><span class="fp">786K/kg</span></label></div>
+          <div class="fc"><input type="radio" name="flavor" id="f6" value="Raspberry Spinach"><label for="f6"><span class="fe">🌹</span><span class="fn">تمشک اسفناج</span><span class="fp">800K/kg</span></label></div>
+          <div class="fc"><input type="radio" name="flavor" id="f7" value="Orange Blossom Spinach"><label for="f7"><span class="fe">🍊</span><span class="fn">بهار نارنج</span><span class="fp">845K/kg</span></label></div>
+        </div>
+      </div>
+ 
+      <div class="row2" style="margin-top:18px">
+        <div class="field" style="margin:0">
+          <label>وزن (کیلوگرم) <span class="req">*</span></label>
+          <input type="number" name="kg" id="kgInput" placeholder="1.5" min="0.5" max="20" step="0.5" required>
+        </div>
+        <div class="field" style="margin:0">
+          <label>شکل کیک <span class="req">*</span></label>
+          <div class="pills" style="margin-top:4px">
+            <div class="pill"><input type="radio" name="shape" id="s1" value="Round"><label for="s1">⭕ گرد</label></div>
+            <div class="pill"><input type="radio" name="shape" id="s2" value="Rectangle"><label for="s2">▭ مستطیل</label></div>
+          </div>
+        </div>
+      </div>
+ 
+      <div class="field" style="margin-top:18px">
+        <label>متن روی کیک</label>
+        <input type="text" name="custom_text" placeholder="مثلاً: تولدت مبارک عزیزم ✨">
+      </div>
+      <div class="field">
+        <label>توضیحات ویژه</label>
+        <textarea name="notes" placeholder="هر چیزی که باید بدانیم..."></textarea>
+      </div>
+    </div>
+ 
+    <!-- CARD 3: Delivery -->
+    <div class="card">
+      <div class="sec-head">
+        <div class="sec-icon si-t">🚗</div>
+        <div><div class="sec-title">تحویل سفارش</div><div class="sec-sub">چطور کیک به دستتان برسد؟</div></div>
+      </div>
+ 
+      <div class="field">
+        <label>روش دریافت <span class="req">*</span></label>
+        <div class="dtoggle-grid">
+          <div class="dt">
+            <input type="radio" name="delivery_type" id="d1" value="pickup">
+            <label for="d1"><span class="di">🏪</span><span class="dn">حضوری</span><span class="ds">تحویل از مغازه</span></label>
+          </div>
+          <div class="dt">
+            <input type="radio" name="delivery_type" id="d2" value="delivery">
+            <label for="d2"><span class="di">🛵</span><span class="dn">ارسال</span><span class="ds">+۵۰,۰۰۰ تومان</span></label>
+          </div>
+        </div>
+      </div>
+ 
+      <div id="addr-wrap">
+        <div class="field">
+          <label>آدرس کامل <span class="req">*</span></label>
+          <textarea name="address" id="addrField" placeholder="شهر، خیابان، کوچه، پلاک..."></textarea>
+        </div>
+      </div>
+ 
+      <div class="row2" style="margin-top:16px">
+        <div class="field" style="margin:0">
+          <label>تاریخ تحویل <span class="req">*</span></label>
+          <div class="date-row">
+            <div class="date-input-wrap">
+              <input type="text" name="delivery_date" id="dateDisplay" placeholder="انتخاب تاریخ" readonly required style="cursor:pointer;" onclick="dpOpen()">
+            </div>
+            <button type="button" class="date-btn" onclick="dpOpen()">📅</button>
+          </div>
+        </div>
+        <div class="field" style="margin:0">
+          <label>زمان تحویل <span class="req">*</span></label>
+          <select name="delivery_time" required>
+            <option value="">انتخاب کنید</option>
+            <option value="10:00-12:00">۱۰ تا ۱۲</option>
+            <option value="12:00-14:00">۱۲ تا ۱۴</option>
+            <option value="14:00-16:00">۱۴ تا ۱۶</option>
+            <option value="16:00-18:00">۱۶ تا ۱۸</option>
+            <option value="18:00-20:00">۱۸ تا ۲۰</option>
+          </select>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- PRICE -->
+    <div class="price-card" id="priceCard">
+      <div><div class="p-tag">قیمت تخمینی سفارش</div><div class="p-num" id="priceNum">۰</div><div class="p-unit">تومان</div></div>
+      <div class="p-ico">💎</div>
+    </div>
+ 
+    <!-- SUBMIT -->
+    <button type="submit" class="submit-btn" id="submitBtn">
+      <span style="font-size:21px">🎂</span><span>ثبت سفارش</span>
+    </button>
+    <div class="err" id="errMsg"></div>
+ 
+  </form>
+</div>
+ 
+<!-- ═══ DATE PICKER MODAL ═══ -->
+<div class="dp-overlay" id="dpOverlay">
+  <div class="dp-box">
+    <div class="dp-title">📅 تاریخ تحویل را انتخاب کنید</div>
+ 
+    <!-- Year -->
+    <div class="dp-section">
+      <div class="dp-section-label">سال</div>
+      <div class="year-row">
+        <button type="button" class="year-btn" onclick="dpChangeYear(1)">+</button>
+        <div class="year-val" id="dpYear">1404</div>
+        <button type="button" class="year-btn" onclick="dpChangeYear(-1)">−</button>
+      </div>
+    </div>
+ 
+    <!-- Month -->
+    <div class="dp-section">
+      <div class="dp-section-label">ماه</div>
+      <div class="month-grid" id="dpMonthGrid">
+        <button type="button" class="m-btn" onclick="dpSelectMonth(1)">فروردین</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(2)">اردیبهشت</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(3)">خرداد</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(4)">تیر</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(5)">مرداد</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(6)">شهریور</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(7)">مهر</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(8)">آبان</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(9)">آذر</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(10)">دی</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(11)">بهمن</button>
+        <button type="button" class="m-btn" onclick="dpSelectMonth(12)">اسفند</button>
+      </div>
+    </div>
+ 
+    <!-- Day -->
+    <div class="dp-section">
+      <div class="dp-section-label">روز</div>
+      <div class="day-grid" id="dpDayGrid"></div>
+    </div>
+ 
+    <!-- Actions -->
+    <div class="dp-actions">
+      <button type="button" class="dp-cancel" onclick="dpClose()">انصراف</button>
+      <button type="button" class="dp-confirm" onclick="dpConfirm()">✅ تایید تاریخ</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- ═══ SUCCESS ═══ -->
+<div class="success-wrap" id="successWrap">
+  <div class="success-box">
+    <span class="s-emoji">🎉</span>
+    <div class="s-title">سفارش ثبت شد!</div>
+    <div class="s-msg">کیک سفارشی شما با موفقیت ثبت شد.<br>به زودی تیم ما با شما تماس می‌گیرد.</div>
+    <div class="s-id" id="orderId"></div>
+    <button class="s-close" onclick="resetForm()">سفارش جدید 🎂</button>
+  </div>
+</div>
+ 
+<script>
+// ════════════════════════════
+// CONFIG
+// ════════════════════════════
+const API = '/api/order';
+ 
+const PRICES = {
+  'Mocha':765000,'Nutella':780000,'Vanilla':700000,
+  'Chocolate':650000,'Raspberry Vanilla':786000,
+  'Raspberry Spinach':800000,'Orange Blossom Spinach':845000
+};
+ 
+// ════════════════════════════
+// PERSIAN DATE CONVERTER
+// ════════════════════════════
+function toJalali(gy, gm, gd) {
+  const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+  let jy = gy <= 1600 ? 0 : 979;
+  gy -= gy <= 1600 ? 621 : 1600;
+  const gy2 = gm > 2 ? gy + 1 : gy;
+  let days = (365*gy) + Math.floor((gy2+3)/4) - Math.floor((gy2+99)/100)
+    + Math.floor((gy2+399)/400) - 80 + gd + g_d_m[gm-1];
+  jy += 33 * Math.floor(days/12053);
+  days %= 12053;
+  jy += 4 * Math.floor(days/1461);
+  days %= 1461;
+  jy += Math.floor((days-1)/365);
+  if (days > 365) days = (days-1) % 365;
+  const jm = days < 186 ? 1+Math.floor(days/31) : 7+Math.floor((days-186)/30);
+  const jd = 1 + (days < 186 ? days%31 : (days-186)%30);
+  return {year:jy, month:jm, day:jd};
+}
+ 
+// ════════════════════════════
+// DATE PICKER STATE
+// ════════════════════════════
+const today = new Date();
+const todayJ = toJalali(today.getFullYear(), today.getMonth()+1, today.getDate());
+ 
+let dp = {
+  year: todayJ.year,
+  month: todayJ.month,
+  day: todayJ.day,
+  todayYear: todayJ.year,
+  todayMonth: todayJ.month,
+  todayDay: todayJ.day
+};
+ 
+function dpFormatted() {
+  return `${dp.year}/${String(dp.month).padStart(2,'0')}/${String(dp.day).padStart(2,'0')}`;
+}
+ 
+function dpOpen() {
+  document.getElementById('dpOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  dpRender();
+}
+ 
+function dpClose() {
+  document.getElementById('dpOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+ 
+function dpChangeYear(n) {
+  dp.year += n;
+  document.getElementById('dpYear').textContent = dp.year;
+  dpRenderDays();
+}
+ 
+function dpSelectMonth(m) {
+  dp.month = m;
+  dpRenderMonths();
+  dpRenderDays();
+}
+ 
+function dpRenderMonths() {
+  document.querySelectorAll('.m-btn').forEach((btn, idx) => {
+    btn.classList.toggle('active', idx + 1 === dp.month);
+  });
+}
+ 
+function dpRenderDays() {
+  const daysInMonth = [31,31,31,31,31,31,30,30,30,30,30,29];
+  const max = daysInMonth[dp.month - 1];
+  const grid = document.getElementById('dpDayGrid');
+  grid.innerHTML = '';
+ 
+  for (let d = 1; d <= max; d++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'd-btn';
+    btn.textContent = d;
+ 
+    const isSelected = d === dp.day;
+    const isToday = d === dp.todayDay && dp.month === dp.todayMonth && dp.year === dp.todayYear;
+ 
+    if (isSelected) btn.classList.add('active');
+    if (isToday && !isSelected) btn.classList.add('today');
+ 
+    btn.addEventListener('click', () => {
+      dp.day = d;
+      dpRenderDays();
+    });
+    grid.appendChild(btn);
+  }
+}
+ 
+function dpRender() {
+  document.getElementById('dpYear').textContent = dp.year;
+  dpRenderMonths();
+  dpRenderDays();
+}
+ 
+function dpConfirm() {
+  document.getElementById('dateDisplay').value = dpFormatted();
+  dpClose();
+}
+ 
+// Set today's date on load
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('dateDisplay').value = dpFormatted();
+ 
+  // Close on overlay background click
+  document.getElementById('dpOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'dpOverlay') dpClose();
+  });
+});
+ 
+// ════════════════════════════
+// DELIVERY TOGGLE
+// ════════════════════════════
+document.querySelectorAll('input[name="delivery_type"]').forEach(r => {
+  r.addEventListener('change', function() {
+    const wrap = document.getElementById('addr-wrap');
+    const addr = document.getElementById('addrField');
+    if (this.value === 'delivery') {
+      wrap.classList.add('open');
+      addr.required = true;
+    } else {
+      wrap.classList.remove('open');
+      addr.required = false;
+      addr.value = '';
+    }
+    calcPrice();
+  });
+});
+ 
+// ════════════════════════════
+// LIVE PRICE
+// ════════════════════════════
+function calcPrice() {
+  const flavor = document.querySelector('input[name="flavor"]:checked')?.value;
+  const kg = parseFloat(document.getElementById('kgInput').value);
+  const delivery = document.querySelector('input[name="delivery_type"]:checked')?.value;
+  const card = document.getElementById('priceCard');
+  if (flavor && kg > 0) {
+    const total = PRICES[flavor] * kg + (delivery === 'delivery' ? 50000 : 0);
+    document.getElementById('priceNum').textContent = total.toLocaleString('fa-IR');
+    card.classList.add('show');
+  } else {
+    card.classList.remove('show');
+  }
+}
+ 
+document.querySelectorAll('input[name="flavor"]').forEach(r => r.addEventListener('change', calcPrice));
+document.getElementById('kgInput').addEventListener('input', calcPrice);
+ 
+// ════════════════════════════
+// FORM SUBMIT
+// ════════════════════════════
+document.getElementById('orderForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const err = document.getElementById('errMsg');
+  err.style.display = 'none';
+ 
+  const flavor = document.querySelector('input[name="flavor"]:checked')?.value;
+  const shape = document.querySelector('input[name="shape"]:checked')?.value;
+  const delivery_type = document.querySelector('input[name="delivery_type"]:checked')?.value;
+  const phone = document.getElementById('phone').value.trim();
+ 
+  if (!flavor)        { showErr('لطفاً طعم کیک را انتخاب کنید 🍫'); return; }
+  if (!shape)         { showErr('لطفاً شکل کیک را انتخاب کنید'); return; }
+  if (!delivery_type) { showErr('لطفاً روش تحویل را انتخاب کنید'); return; }
+  if (!/^09\d{9}$/.test(phone)) { showErr('شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود'); return; }
+ 
+  const payload = {
+    name: document.getElementById('fname').value.trim(),
+    phone,
+    flavor,
+    kg: document.getElementById('kgInput').value,
+    shape,
+    custom_text: this.custom_text.value.trim(),
+    notes: this.notes.value.trim(),
+    delivery_type,
+    address: document.getElementById('addrField')?.value?.trim() || '',
+    delivery_date: document.getElementById('dateDisplay').value,
+    delivery_time: this.delivery_time.value,
+  };
+ 
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span><span>در حال ثبت سفارش...</span>';
+ 
+  try {
+    const res = await fetch(API, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (res.ok && json.success) {
+      document.getElementById('orderId').textContent = `کد پیگیری: #${Date.now().toString().slice(-6)}`;
+      document.getElementById('successWrap').classList.add('show');
+    } else {
+      showErr(json.error || 'مشکلی پیش آمد. دوباره تلاش کنید.');
+      resetBtn();
+    }
+  } catch {
+    showErr('خطا در اتصال به سرور. اینترنت خود را بررسی کنید.');
+    resetBtn();
+  }
+});
+ 
+function showErr(msg) {
+  const el = document.getElementById('errMsg');
+  el.textContent = '❌  ' + msg;
+  el.style.display = 'block';
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+ 
+function resetBtn() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  btn.innerHTML = '<span style="font-size:21px">🎂</span><span>ثبت سفارش</span>';
+}
+ 
+function resetForm() {
+  document.getElementById('successWrap').classList.remove('show');
+  document.getElementById('orderForm').reset();
+  document.getElementById('priceCard').classList.remove('show');
+  document.getElementById('addr-wrap').classList.remove('open');
+  document.getElementById('dateDisplay').value = dpFormatted();
+  document.getElementById('errMsg').style.display = 'none';
+  resetBtn();
+}
+</script>
+</body>
+</html>
+ 
