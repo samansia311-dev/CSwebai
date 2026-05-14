@@ -437,7 +437,7 @@ textarea{resize:vertical;min-height:82px;line-height:1.7;}
           <div class="fc"><input type="radio" name="flavor" id="f3" value="Vanilla"><label for="f3"><span class="fe">🍦</span><span class="fn">وانیل</span><span class="fp">700K/kg</span></label></div>
           <div class="fc"><input type="radio" name="flavor" id="f4" value="Chocolate"><label for="f4"><span class="fe">🍫</span><span class="fn">شکلات</span><span class="fp">650K/kg</span></label></div>
           <div class="fc"><input type="radio" name="flavor" id="f5" value="Raspberry Vanilla"><label for="f5"><span class="fe">🫐</span><span class="fn">وانیل تمشک</span><span class="fp">786K/kg</span></label></div>
-          <div class="fc"><input type="radio" name="flavor" id="f6" value="Raspberry Spinach"><label for="f6"><span class="fe">🌹</span><span class="fn">تمشک اسفناج</span><span class="fp">800K/kg</span></label></div>
+          <div class="fc"><input type="radio" name="flavor" id="f6" value="Raspberry Spinach"><label for="f6"><span class="fe">🌹</span><span class="fn">تمشک پسته</span><span class="fp">800K/kg</span></label></div>
           <div class="fc"><input type="radio" name="flavor" id="f7" value="Orange Blossom Spinach"><label for="f7"><span class="fe">🍊</span><span class="fn">بهار نارنج</span><span class="fp">845K/kg</span></label></div>
         </div>
       </div>
@@ -633,22 +633,48 @@ function toJalali(gy, gm, gd) {
 }
 
 // Convert Jalali to Gregorian Date object
-function jalaliToGregorian(jy, jm, jd) {
+function jalaliToGregorian(j_y, j_m, j_d) {
   let gy, gm, gd;
-  jy += 1595;
-  let days = -355779 + (365 * jy) + (Math.floor(jy/33)*8) + Math.floor(((jy%33)+3)/4) + jd;
-  const jMonthDays = [0,31,31,31,31,31,31,30,30,30,30,30,29];
-  for (let i=1; i < jm; i++) days += jMonthDays[i];
-  gy = 400 * Math.floor(days/146097);
-  days %= 146097;
-  if (days > 36524) { gy += 100*Math.floor(--days/36524); days %= 36524; if (days >= 365) days++; }
-  gy += 4 * Math.floor(days/1461);
-  days %= 1461;
-  if (days > 364) { gy += Math.floor((days-1)/365); days = (days-1)%365; }
-  const gMonthDays = [31,((gy%4===0 && gy%100!==0)||(gy%400===0))?29:28,31,30,31,30,31,31,30,31,30,31];
-  gd = days + 1;
-  for (gm=0; gm<12 && gd>gMonthDays[gm]; gm++) gd -= gMonthDays[gm];
-  return new Date(gy, gm, gd);
+  let jy = parseInt(j_y) - 979;
+  let jm = parseInt(j_m) - 1;
+  let jd = parseInt(j_d) - 1;
+
+  let j_day_no = 365 * jy + Math.floor(jy / 33) * 8 + Math.floor((jy % 33 + 3) / 4);
+  for (let i = 0; i < jm; ++i) j_day_no += (i < 6) ? 31 : 30;
+  j_day_no += jd;
+
+  let g_day_no = j_day_no + 79;
+
+  gy = 1600 + 400 * Math.floor(g_day_no / 146097);
+  g_day_no = g_day_no % 146097;
+
+  let leap = true;
+  if (g_day_no >= 36525) {
+    g_day_no--;
+    gy += 100 * Math.floor(g_day_no / 36524);
+    g_day_no = g_day_no % 36524;
+    if (g_day_no >= 365) g_day_no++;
+    else leap = false;
+  }
+
+  gy += 4 * Math.floor(g_day_no / 1461);
+  g_day_no %= 1461;
+
+  if (g_day_no >= 366) {
+    leap = false;
+    g_day_no--;
+    gy += Math.floor(g_day_no / 365);
+    g_day_no = g_day_no % 365;
+  }
+
+  let i;
+  const g_days_in_month = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  for (i = 0; g_day_no >= g_days_in_month[i]; i++)
+    g_day_no -= g_days_in_month[i];
+  gm = i + 1;
+  gd = g_day_no + 1;
+
+  return new Date(gy, gm - 1, gd);
 }
 
 // ════════════════════════════
@@ -670,25 +696,23 @@ function dayNum(date) {
 // Check if a Jalali date is disabled
 function isDayDisabled(jy, jm, jd) {
   const gDate = jalaliToGregorian(jy, jm, jd);
-  const dow = gDate.getDay(); // 0=Sun ... 5=Fri ... 6=Sat
-
-  // Friday always blocked
+  const dow = gDate.getDay(); 
   if (dow === 5) return true;
 
   const tehran = getTehranNow();
-  const todayNum = dayNum(new Date(tehran.getFullYear(), tehran.getMonth(), tehran.getDate()));
-  const targetNum = dayNum(new Date(gDate.getFullYear(), gDate.getMonth(), gDate.getDate()));
+  const todayJ = toJalali(tehran.getFullYear(), tehran.getMonth() + 1, tehran.getDate());
+  
+  // Simple Jalali date comparison: YYYYMMDD
+  const todayVal = todayJ.year * 10000 + todayJ.month * 100 + todayJ.day;
+  const targetVal = jy * 10000 + jm * 100 + jd;
 
-  // Past dates always blocked
-  if (targetNum < todayNum) return true;
+  if (targetVal < todayVal) return true;
 
-  // Read form state fresh
   const isRectangle = document.querySelector('input[name="shape"]:checked')?.value === 'Rectangle';
   const hasText = (document.querySelector('input[name="custom_text"]')?.value?.trim() || '').length > 0;
   const isPastCutoff = tehran.getHours() >= 13;
 
-  // Block TODAY if rules apply
-  if (targetNum === todayNum) {
+  if (targetVal === todayVal) {
     if (isRectangle) return true;
     if (hasText && isPastCutoff) return true;
   }
@@ -717,31 +741,33 @@ const tehranNow = getTehranNow();
 const todayJ = toJalali(tehranNow.getFullYear(), tehranNow.getMonth()+1, tehranNow.getDate());
 
 let dp = {
-  year: todayJ.year,
-  month: todayJ.month,
-  day: todayJ.day,
+  viewYear: todayJ.year,
+  viewMonth: todayJ.month,
+  selYear: todayJ.year,
+  selMonth: todayJ.month,
+  selDay: todayJ.day,
   todayYear: todayJ.year,
   todayMonth: todayJ.month,
   todayDay: todayJ.day
 };
 
 function dpFormatted() {
-  return `${dp.year}/${String(dp.month).padStart(2,'0')}/${String(dp.day).padStart(2,'0')}`;
+  return `${dp.selYear}/${String(dp.selMonth).padStart(2,'0')}/${String(dp.selDay).padStart(2,'0')}`;
 }
 
 function dpOpen() {
-  // Always recalculate earliest available when opening (rules may have changed)
   const earliest = getEarliestAvailable();
-
-  // Always jump dp to earliest if current selection is disabled
-  if (isDayDisabled(dp.year, dp.month, dp.day)) {
-    dp.year = earliest.year;
-    dp.month = earliest.month;
-    dp.day = earliest.day;
+  
+  // If current selection is disabled, reset to earliest
+  if (isDayDisabled(dp.selYear, dp.selMonth, dp.selDay)) {
+    dp.selYear = earliest.year;
+    dp.selMonth = earliest.month;
+    dp.selDay = earliest.day;
   }
-
-  // Also update the displayed month to match
-  dp.month = dp.month;
+  
+  // Always ensure view matches selection when opening
+  dp.viewYear = dp.selYear;
+  dp.viewMonth = dp.selMonth;
 
   document.getElementById('dpOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -754,20 +780,20 @@ function dpClose() {
 }
 
 function dpSelectMonth(m) {
-  dp.month = m;
+  dp.viewMonth = m;
   dpRenderMonths();
   dpRenderDays();
 }
 
 function dpRenderMonths() {
   document.querySelectorAll('.m-btn').forEach((btn, idx) => {
-    btn.classList.toggle('active', idx + 1 === dp.month);
+    btn.classList.toggle('active', idx + 1 === dp.viewMonth);
   });
 }
 
 function dpRenderDays() {
   const daysInMonth = [31,31,31,31,31,31,30,30,30,30,30,29];
-  const max = daysInMonth[dp.month - 1];
+  const max = daysInMonth[dp.viewMonth - 1];
   const grid = document.getElementById('dpDayGrid');
   grid.innerHTML = '';
 
@@ -777,9 +803,9 @@ function dpRenderDays() {
     btn.className = 'd-btn';
     btn.textContent = d;
 
-    const isSelected = d === dp.day && dp.month === dp.month;
-    const isToday = d === dp.todayDay && dp.month === dp.todayMonth && dp.year === dp.todayYear;
-    const disabled = isDayDisabled(dp.year, dp.month, d);
+    const isSelected = d === dp.selDay && dp.viewMonth === dp.selMonth && dp.viewYear === dp.selYear;
+    const isToday = d === dp.todayDay && dp.viewMonth === dp.todayMonth && dp.viewYear === dp.todayYear;
+    const disabled = isDayDisabled(dp.viewYear, dp.viewMonth, d);
 
     if (isSelected) btn.classList.add('active');
     if (isToday && !isSelected) btn.classList.add('today');
@@ -788,7 +814,9 @@ function dpRenderDays() {
       btn.disabled = true;
     } else {
       btn.addEventListener('click', () => {
-        dp.day = d;
+        dp.selDay = d;
+        dp.selMonth = dp.viewMonth;
+        dp.selYear = dp.viewYear;
         dpRenderDays();
       });
     }
@@ -797,12 +825,14 @@ function dpRenderDays() {
 }
 
 function dpRender() {
+  const yearEl = document.getElementById('dpYear');
+  if (yearEl) yearEl.textContent = dp.viewYear;
   dpRenderMonths();
   dpRenderDays();
 }
 
 function dpConfirm() {
-  if (isDayDisabled(dp.year, dp.month, dp.day)) {
+  if (isDayDisabled(dp.selYear, dp.selMonth, dp.selDay)) {
     alert('این روز قابل انتخاب نیست. لطفاً روز دیگری انتخاب کنید.');
     return;
   }
@@ -813,10 +843,10 @@ function dpConfirm() {
 // Re-check date when shape or custom text changes
 function recheckDate() {
   const earliest = getEarliestAvailable();
-  if (isDayDisabled(dp.year, dp.month, dp.day)) {
-    dp.year = earliest.year;
-    dp.month = earliest.month;
-    dp.day = earliest.day;
+  if (isDayDisabled(dp.selYear, dp.selMonth, dp.selDay)) {
+    dp.selYear = earliest.year;
+    dp.selMonth = earliest.month;
+    dp.selDay = earliest.day;
     document.getElementById('dateDisplay').value = dpFormatted();
   }
 }
@@ -971,58 +1001,11 @@ function resetForm() {
   document.getElementById('addr-wrap').classList.remove('open');
   document.getElementById('discountTag').classList.remove('show');
   const earliest = getEarliestAvailable();
-  dp.year = earliest.year; dp.month = earliest.month; dp.day = earliest.day;
+  dp.selYear = earliest.year; dp.selMonth = earliest.month; dp.selDay = earliest.day;
+  dp.viewYear = earliest.year; dp.viewMonth = earliest.month;
   document.getElementById('dateDisplay').value = dpFormatted();
   document.getElementById('errMsg').style.display = 'none';
   resetBtn();
-}
-</script>
-
-</body>
-</html>
-
-function dpSelectMonth(m) {
-  dp.month = m;
-  dpRenderMonths();
-  dpRenderDays();
-}
-
-function dpRenderMonths() {
-  document.querySelectorAll('.m-btn').forEach((btn, idx) => {
-    btn.classList.toggle('active', idx + 1 === dp.month);
-  });
-}
-
-function dpRenderDays() {
-  const daysInMonth = [31,31,31,31,31,31,30,30,30,30,30,29];
-  const max = daysInMonth[dp.month - 1];
-  const grid = document.getElementById('dpDayGrid');
-  grid.innerHTML = '';
-
-  for (let d = 1; d <= max; d++) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'd-btn';
-    btn.textContent = d;
-
-    const isSelected = d === dp.day;
-    const isToday = d === dp.todayDay && dp.month === dp.todayMonth && dp.year === dp.todayYear;
-
-    if (isSelected) btn.classList.add('active');
-    if (isToday && !isSelected) btn.classList.add('today');
-
-    btn.addEventListener('click', () => {
-      dp.day = d;
-      dpRenderDays();
-    });
-    grid.appendChild(btn);
-  }
-}
-
-function dpRender() {
-  document.getElementById('dpYear').textContent = dp.year;
-  dpRenderMonths();
-  dpRenderDays();
 }
 
 function dpConfirm() {
@@ -1135,28 +1118,7 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
   }
 });
 
-function showErr(msg) {
-  const el = document.getElementById('errMsg');
-  el.textContent = '❌  ' + msg;
-  el.style.display = 'block';
-  el.scrollIntoView({behavior:'smooth', block:'center'});
-}
 
-function resetBtn() {
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = false;
-  btn.innerHTML = '<span style="font-size:21px">🎂</span><span>ثبت سفارش</span>';
-}
-
-function resetForm() {
-  document.getElementById('successWrap').classList.remove('show');
-  document.getElementById('orderForm').reset();
-  document.getElementById('priceCard').classList.remove('show');
-  document.getElementById('addr-wrap').classList.remove('open');
-  document.getElementById('dateDisplay').value = dpFormatted();
-  document.getElementById('errMsg').style.display = 'none';
-  resetBtn();
-}
 </script>
 </body>
 </html>
