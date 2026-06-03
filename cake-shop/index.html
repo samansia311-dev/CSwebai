@@ -75,7 +75,59 @@ body::after{
   background-image:url("data:image/svg+xml,%3Csvg width='8' height='8' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23C75B3A' opacity='0.05'/%3E%3C/svg%3E");
 }
 
-/* ═══ REDUCED MOTION ═══ */
+/* ═══ PRESET CHIPS ═══ */
+.preset-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.preset-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 12px;
+  background:var(--surface-warm);
+  border:1.5px solid var(--border);
+  border-radius:100px;
+  font-family:'Vazirmatn',sans-serif;
+  font-size:12px;font-weight:600;
+  color:var(--text-dim);
+  cursor:pointer;transition:all .18s var(--ease-out);
+  white-space:nowrap;user-select:none;
+}
+.preset-chip:hover{border-color:var(--accent);color:var(--accent);background:#FDF5F2;}
+.preset-chip.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-color:transparent;color:#fff;
+  box-shadow:0 2px 10px rgba(199,91,58,.2);
+}
+
+/* ═══ PHOTO UPLOAD ═══ */
+.upload-zone{
+  position:relative;
+  border:2px dashed var(--border-strong);
+  border-radius:var(--radius-sm);
+  padding:20px 16px;text-align:center;
+  cursor:pointer;transition:all .2s ease;
+  background:var(--surface-warm);overflow:hidden;
+}
+.upload-zone:hover{border-color:var(--accent);background:#FDF5F2;}
+.upload-zone.has-file{border-style:solid;border-color:var(--accent);background:#FDF5F2;}
+.upload-zone input[type="file"]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;
+  width:100%;height:100%;
+}
+.up-icon{font-size:26px;margin-bottom:6px;display:block;transition:transform .2s;}
+.upload-zone:hover .up-icon{transform:translateY(-2px);}
+.up-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.up-hint{font-size:11px;color:var(--text-muted);}
+.up-preview{
+  display:none;width:100%;max-height:160px;
+  object-fit:cover;border-radius:8px;margin-top:10px;
+  box-shadow:var(--shadow-sm);
+}
+.up-preview.show{display:block;}
+.up-status{
+  font-size:12px;font-weight:600;
+  color:var(--accent);margin-top:6px;display:none;
+}
+.up-status.show{display:block;}
+
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important;}
 }
@@ -752,8 +804,33 @@ textarea{resize:vertical;min-height:90px;line-height:1.7;}
 
       <div class="field" style="margin-top:20px">
         <label class="label-float">متن روی کیک</label>
-        <input type="text" name="custom_text" id="customText" placeholder="مثلاً: تولدت مبارک عزیزم ✨">
+        <!-- Quick presets -->
+        <div class="preset-chips" id="presetChips">
+          <button type="button" class="preset-chip" data-text="Happy Birthday 🎂">🎂 Happy Birthday</button>
+          <button type="button" class="preset-chip" data-text="تولدت مبارک 🎉">🎉 تولدت مبارک</button>
+          <button type="button" class="preset-chip" data-text="Congratulations 🌟">🌟 Congratulations</button>
+          <button type="button" class="preset-chip" data-text="مبارک باشه 💍">💍 مبارک باشه</button>
+          <button type="button" class="preset-chip" data-text="Happy Anniversary ❤️">❤️ Anniversary</button>
+          <button type="button" class="preset-chip" data-text="Well Done! ⭐">⭐ Well Done</button>
+          <button type="button" class="preset-chip" data-text="With Love 🌹">🌹 With Love</button>
+          <button type="button" class="preset-chip" data-text="بدون متن ✕" data-clear="true">✕ بدون متن</button>
+        </div>
+        <input type="text" name="custom_text" id="customText" placeholder="یا متن دلخواه خود را بنویسید...">
       </div>
+
+      <!-- PHOTO UPLOAD -->
+      <div class="field">
+        <label class="label-float">عکس مرجع کیک <span style="font-weight:400;font-size:11px;color:var(--text-muted)">(اختیاری)</span></label>
+        <div class="upload-zone" id="upZone">
+          <input type="file" id="cakePhoto" accept="image/jpeg,image/png,image/webp" onchange="handlePhotoSelect(this)">
+          <span class="up-icon" id="upIcon">📸</span>
+          <div class="up-title" id="upTitle">عکس کیک مورد نظرتان را آپلود کنید</div>
+          <div class="up-hint" id="upHint">JPG, PNG — حداکثر ۵ مگابایت</div>
+          <img class="up-preview" id="upPreview" src="" alt="پیش‌نمایش">
+          <div class="up-status" id="upStatus"></div>
+        </div>
+      </div>
+
       <div class="field">
         <label class="label-float">توضیحات ویژه</label>
         <textarea name="notes" id="notesField" placeholder="هر چیزی که باید بدانیم..."></textarea>
@@ -1708,6 +1785,86 @@ function updateStepper(){
 });
 
 // ════════════════════════════
+// PRESET CHIPS
+// ════════════════════════════
+let uploadedPhotoUrl = '';
+
+document.querySelectorAll('.preset-chip').forEach(chip => {
+  chip.addEventListener('click', function() {
+    const isClear = this.dataset.clear === 'true';
+    const input = document.getElementById('customText');
+    // Toggle off if already active
+    if (this.classList.contains('active')) {
+      this.classList.remove('active');
+      input.value = '';
+    } else {
+      // Deactivate all, activate this one
+      document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      input.value = isClear ? '' : this.dataset.text;
+    }
+    recheckDate();
+    saveFormState();
+  });
+});
+
+// Deactivate chips when user types manually
+document.getElementById('customText')?.addEventListener('input', function() {
+  document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+  recheckDate();
+});
+
+// ════════════════════════════
+// PHOTO UPLOAD (Imgur)
+// ════════════════════════════
+function handlePhotoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    alert('حجم فایل نباید بیشتر از ۵ مگابایت باشد');
+    input.value = '';
+    return;
+  }
+  // Instant local preview
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('upPreview');
+    prev.src = e.target.result;
+    prev.classList.add('show');
+    const zone = document.getElementById('upZone');
+    zone.classList.add('has-file');
+    document.getElementById('upIcon').textContent = '✅';
+    document.getElementById('upTitle').textContent = file.name;
+    document.getElementById('upHint').textContent = (file.size / 1024).toFixed(0) + ' KB';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadToImgur(file) {
+  const status = document.getElementById('upStatus');
+  status.textContent = '⏳ در حال آپلود عکس...';
+  status.classList.add('show');
+  try {
+    const fd = new FormData();
+    fd.append('image', file);
+    const res = await fetch('https://api.imgur.com/3/image', {
+      method: 'POST',
+      headers: { 'Authorization': 'Client-ID 546c25a59c58ad7' },
+      body: fd
+    });
+    const data = await res.json();
+    if (data.success) {
+      status.textContent = '✅ عکس آپلود شد';
+      return data.data.link;
+    }
+    throw new Error('upload failed');
+  } catch {
+    status.textContent = '⚠️ آپلود عکس ناموفق — سفارش بدون عکس ثبت می‌شود';
+    return '';
+  }
+}
+
+// ════════════════════════════
 // SCROLL BEHAVIOR
 // ════════════════════════════
 const navbar=document.getElementById('navbar');
@@ -1817,11 +1974,16 @@ document.getElementById('orderForm').addEventListener('submit',async function(e)
     address:document.getElementById('addrField')?.value?.trim()||'',
     delivery_date:selDate,
     delivery_time:this.delivery_time.value,
+    cake_photo_url: uploadedPhotoUrl,
   };
 
   btn.disabled=true;sbtn.disabled=true;
   const loadHtml='<span style="font-size:20px">⏳</span><span>در حال ثبت...</span>';
   btn.innerHTML=loadHtml;sbtn.innerHTML='⏳';
+
+  // Upload photo if selected
+  const photoFile = document.getElementById('cakePhoto').files[0];
+  if (photoFile) uploadedPhotoUrl = await uploadToImgur(photoFile);
 
   try{
     const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -1864,6 +2026,16 @@ function resetForm(){
   document.getElementById('priceCard').classList.remove('show');
   document.getElementById('addr-wrap').classList.remove('open');
   document.getElementById('errMsg').classList.remove('show');
+  // Reset photo
+  uploadedPhotoUrl = '';
+  document.getElementById('upPreview').classList.remove('show');
+  document.getElementById('upZone').classList.remove('has-file');
+  document.getElementById('upIcon').textContent = '📸';
+  document.getElementById('upTitle').textContent = 'عکس کیک مورد نظرتان را آپلود کنید';
+  document.getElementById('upHint').textContent = 'JPG, PNG — حداکثر ۵ مگابایت';
+  document.getElementById('upStatus').classList.remove('show');
+  // Reset preset chips
+  document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
   const e=getEarliestAvailable();
   dp.year=e.year;dp.month=e.month;dp.day=e.day;
   document.getElementById('dateDisplay').value=dpFormatted();
