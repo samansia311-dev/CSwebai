@@ -1,11 +1,8 @@
 /**
- * 🔒 Smart API Proxy Server
+ * Smart API Proxy Server
  * 
  * این سرور به عنوان واسط بین فرانت‌اند و API اسمارت عمل میکنه.
  * توکن احراز هویت فقط توی سرور نگهداری میشه (امنیت بالا).
- * 
- * نصب: npm install express cors node-fetch
- * اجرا: node server-proxy.js
  */
 
 const express = require('express');
@@ -16,43 +13,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ═══════════════════════════════════════════
-// ⚙️ تنظیمات — اینجا اطلاعات خودت رو وارد کن
-// ═══════════════════════════════════════════
 const CONFIG = {
-  // آدرس پایه API ارزیابی هوشمند (سینک دیتا)
   SYNC_BASE_URL: 'https://sepidz.smartx.ir/api/v1',
-  // آدرس پایه API باشگاه مشتریان  
   CLUB_BASE_URL: 'https://app.smartx.ir/api/v1',
-  // نام کاربری API
-  USERNAME: '922447',   // ← اینجا عوض کن
-  // رمز عبور API
-  PASSWORD: 'M9224471513195a',   // ← اینجا عوض کن
-  // کد قفل شعبه (وقتی گرفتی اینجا بذار)
-  BRANCH_CLOUD_CONSUMER_ID: 922447, // ← اینجا عوض کن
-  // پورت سرور
-  PORT: 5000,
+  USERNAME: process.env.SMART_API_USERNAME,
+  PASSWORD: process.env.SMART_API_PASSWORD,
+  BRANCH_CLOUD_CONSUMER_ID: parseInt(process.env.SMART_BRANCH_ID || '0', 10),
+  PORT: process.env.PORT || 5000,
 };
 
-// ═══════════════════════════════════════════
-// 🔑 مدیریت توکن
-// ═══════════════════════════════════════════
 let tokenData = {
   accessToken: null,
   refreshToken: null,
   expiresAt: null,
 };
 
-/**
- * دریافت توکن از API اسمارت
- */
 async function getToken() {
-  // اگر توکن معتبر داریم، همون رو برگردون
   if (tokenData.accessToken && tokenData.expiresAt && Date.now() < tokenData.expiresAt) {
     return tokenData.accessToken;
   }
 
-  // اگر ریفرش توکن داریم، با اون توکن جدید بگیر
   if (tokenData.refreshToken) {
     try {
       const newToken = await refreshAccessToken(tokenData.refreshToken);
@@ -62,7 +42,10 @@ async function getToken() {
     }
   }
 
-  // توکن جدید بگیر
+  if (!CONFIG.USERNAME || !CONFIG.PASSWORD) {
+    throw new Error('SMART_API_USERNAME and SMART_API_PASSWORD environment variables are not set');
+  }
+
   const fetch = (await import('node-fetch')).default;
   const response = await fetch(`${CONFIG.CLUB_BASE_URL}/Account/Login`, {
     method: 'POST',
@@ -80,16 +63,12 @@ async function getToken() {
   const result = await response.json();
   tokenData.accessToken = result.access_token;
   tokenData.refreshToken = result.refresh_token;
-  // توکن رو ۵۵ دقیقه معتبر فرض میکنیم (معمولاً ۶۰ دقیقه‌ست)
   tokenData.expiresAt = Date.now() + 55 * 60 * 1000;
 
-  console.log('✅ توکن جدید دریافت شد');
+  console.log('New token received');
   return tokenData.accessToken;
 }
 
-/**
- * تمدید توکن با Refresh Token
- */
 async function refreshAccessToken(refreshToken) {
   const fetch = (await import('node-fetch')).default;
   const response = await fetch(`${CONFIG.CLUB_BASE_URL}/Account/RefreshToken`, {
@@ -105,22 +84,10 @@ async function refreshAccessToken(refreshToken) {
   tokenData.refreshToken = result.refresh_token;
   tokenData.expiresAt = Date.now() + 55 * 60 * 1000;
 
-  console.log('🔄 توکن تمدید شد');
+  console.log('Token refreshed');
   return tokenData.accessToken;
 }
 
-// ═══════════════════════════════════════════
-// 🏪 API باشگاه مشتریان — اندپوینت‌ها
-// ═══════════════════════════════════════════
-
-/**
- * ① استعلام کد باشگاه / موبایل مشتری
- * 
- * فرانت ارسال میکنه:
- *   { mobile: "09123456789", code: "ABC123", products: [...], totalPrice: 500000 }
- * 
- * یا فقط mobile یا فقط code — هر دو لازم نیست
- */
 app.post('/api/club/inquiry', async (req, res) => {
   try {
     const token = await getToken();
@@ -135,7 +102,7 @@ app.post('/api/club/inquiry', async (req, res) => {
       Mobile: mobile || '',
       Code: code || '',
       TotalFacturePrice: totalPrice || 0,
-      OrderType: 12, // ThirdPartyWebSite — برای سفارش از وبسایت غیر سپیدز
+      OrderType: 12,
       posUserId: 0,
       customerInquiryRequestProductsList: (products || []).map(p => ({
         ProductId: p.productId,
@@ -160,36 +127,29 @@ app.post('/api/club/inquiry', async (req, res) => {
       return res.status(response.status).json({ error: 'خطا در استعلام', details: result });
     }
 
-    // پاسخ رو به فرانت برگردون
     res.json({
       success: true,
       data: {
         inquiryId: result.InquiryId,
         customerName: result.CustomerName,
         mobile: result.LongMobile,
-        wallet: result.Wallet,                    // کیف پول
-        availableCredit: result.AvailableCredit,   // اعتبار قابل استفاده
-        discountPercent: result.DiscountPercent,    // درصد تخفیف
-        maxDiscountPrice: result.MaxUsablePriceFromDiscountPercent, // حداکثر مبلغ تخفیف درصدی
-        minInvoiceAmount: result.MinInvoiceAmountToUseCredit, // حداقل مبلغ فاکتور
-        message: result.Message,                   // پیام نمایشی
-        groupName: result.GroupName,               // گروه مشتری (طلایی، نقره‌ای، ...)
-        productDiscounts: result.ProductDiscounts,  // تخفیف محصولات
+        wallet: result.Wallet,
+        availableCredit: result.AvailableCredit,
+        discountPercent: result.DiscountPercent,
+        maxDiscountPrice: result.MaxUsablePriceFromDiscountPercent,
+        minInvoiceAmount: result.MinInvoiceAmountToUseCredit,
+        message: result.Message,
+        groupName: result.GroupName,
+        productDiscounts: result.ProductDiscounts,
         status: result.Status,
       },
     });
   } catch (err) {
-    console.error('❌ Club inquiry error:', err);
+    console.error('Club inquiry error:', err);
     res.status(500).json({ error: 'خطا در ارتباط با سرور اسمارت' });
   }
 });
 
-/**
- * ② استفاده از اعتبار باشگاه
- * 
- * فرانت ارسال میکنه:
- *   { inquiryId, mobile, code, factorId, usedCredit, usedDiscountPercent, products, totalPrice }
- */
 app.post('/api/club/use-credit', async (req, res) => {
   try {
     const token = await getToken();
@@ -209,7 +169,7 @@ app.post('/api/club/use-credit', async (req, res) => {
       Mobile: mobile || '',
       Code: code || '',
       PosUserId: '0',
-      OrderType: 12, // ThirdPartyWebSite
+      OrderType: 12,
       FactorId: factorId || 0,
       UsedCredit: usedCredit || 0,
       UsedDiscountPercent: usedDiscountPercent || 0,
@@ -241,9 +201,9 @@ app.post('/api/club/use-credit', async (req, res) => {
     res.json({
       success: true,
       data: {
-        usedCreditRequestId: result.UsedCreditRequestId, // ⚠️ مهم: این رو توی فاکتور ذخیره کن
-        burnedCredit: result.BurnedCredit,           // اعتبار خرج شده
-        burnedPercentage: result.BurnedPercentage,   // تخفیف درصدی اعمال شده
+        usedCreditRequestId: result.UsedCreditRequestId,
+        burnedCredit: result.BurnedCredit,
+        burnedPercentage: result.BurnedPercentage,
         totalPrice: result.TotalFacturePrice,
         productDiscounts: result.UsedProductDiscounts,
         message: result.Message,
@@ -251,14 +211,11 @@ app.post('/api/club/use-credit', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('❌ Use credit error:', err);
+    console.error('Use credit error:', err);
     res.status(500).json({ error: 'خطا در استفاده از اعتبار' });
   }
 });
 
-/**
- * ③ بازگشت اعتبار (لغو فاکتور)
- */
 app.post('/api/club/undo-credit', async (req, res) => {
   try {
     const token = await getToken();
@@ -287,14 +244,11 @@ app.post('/api/club/undo-credit', async (req, res) => {
       res.status(response.status).json({ error: 'خطا در بازگشت اعتبار' });
     }
   } catch (err) {
-    console.error('❌ Undo credit error:', err);
+    console.error('Undo credit error:', err);
     res.status(500).json({ error: 'خطا در بازگشت اعتبار' });
   }
 });
 
-/**
- * ④ دریافت لیست اعتبارهای فعال مشتری
- */
 app.post('/api/club/active-credits', async (req, res) => {
   try {
     const token = await getToken();
@@ -304,7 +258,6 @@ app.post('/api/club/active-credits', async (req, res) => {
       return res.status(400).json({ error: 'شماره موبایل الزامی است' });
     }
 
-    // حذف صفر ابتدایی برای LongMobile
     const longMobile = parseInt(mobile.replace(/^0/, ''), 10);
 
     const fetch = (await import('node-fetch')).default;
@@ -328,25 +281,13 @@ app.post('/api/club/active-credits', async (req, res) => {
 
     res.json({ success: true, data: result });
   } catch (err) {
-    console.error('❌ Active credits error:', err);
+    console.error('Active credits error:', err);
     res.status(500).json({ error: 'خطا در دریافت لیست اعتبارها' });
   }
 });
 
-// ═══════════════════════════════════════════
-// 📁 سرو فایل‌های استاتیک (وبسایت cake-shop)
-// ═══════════════════════════════════════════
 app.use(express.static(path.join(__dirname, '../cake-shop')));
 
-// ═══════════════════════════════════════════
-// 🚀 شروع سرور
-// ═══════════════════════════════════════════
 app.listen(CONFIG.PORT, '0.0.0.0', () => {
-  console.log(`
-╔══════════════════════════════════════════════╗
-║  🎂 Cake Shop + Smart API Proxy Server       ║
-║  🌐 http://localhost:${CONFIG.PORT}                   ║
-║  📡 API Proxy: /api/club/*                    ║
-╚══════════════════════════════════════════════╝
-  `);
+  console.log(`Cake Shop + Smart API Proxy running on port ${CONFIG.PORT}`);
 });
